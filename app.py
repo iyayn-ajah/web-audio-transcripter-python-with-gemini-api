@@ -4,12 +4,13 @@ from flask import Flask, request, send_file, render_template_string
 import filetype
 from google import genai
 from google.genai import types
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
 port = 3000
 
-
-API_KEY = "YOUR GEMINI API KEYS"
+API_KEY = os.environ.get("GENAI_API_KEY")
 
 client = genai.Client(api_key=API_KEY)
 
@@ -30,11 +31,10 @@ def result():
 
         file_bytes = uploaded_file.read()
         
-        # Deteksi tipe mime file
         kind = filetype.guess(file_bytes)
         
         if kind is None or not kind.mime.startswith("audio/"):
-            return "File yang diunggah harus berupa audio.", 400
+            return "File yang diunggah harus audio.", 400
 
         response = client.models.generate_content(
             model="gemini-3.1-flash-lite",
@@ -82,6 +82,9 @@ def result():
               <button onclick="copyText()" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-purple-300">
                 Copy
               </button>
+              <button onclick="window.location.href='/'" class="ml-4 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-green-300">
+                Back
+              </button>
             </div>
           </div>
 
@@ -89,8 +92,8 @@ def result():
             function copyText() {
               const textToCopy = document.getElementById('textresult').innerText;
               navigator.clipboard.writeText(textToCopy)
-                .then(() => alert("Teks berhasil disalin!"))
-                .catch(err => alert("Gagal menyalin teks: " + err));
+                .then(() => alert("Berhasil disalin!"))
+                .catch(err => alert("Gagal menyalin: " + err));
             }
           </script>
         </body>
@@ -101,7 +104,8 @@ def result():
 
     except Exception as e:
         print(f"Error: {e}")
-        return "Terjadi kesalahan saat memproses file.", 500
+        return "Error 500.", 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=port, debug=True)
+    
